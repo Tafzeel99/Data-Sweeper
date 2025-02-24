@@ -34,7 +34,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Sidebar - File Upload
-st.sidebar.header("📤 Upload Your Files")
+st.sidebar.header("📂 Upload Your Files")
 uploaded_files = st.sidebar.file_uploader("Upload CSV or Excel files", type=['csv', 'xlsx'], accept_multiple_files=True)
 
 # Title & Description
@@ -42,7 +42,7 @@ st.markdown("<h1 style='color:#007BFF;'>🧹 Data Sweeper</h1>", unsafe_allow_ht
 st.write("📂 **Upload your data file, clean it, analyze it, and export it effortlessly!**")
 
 # Tabs for workflow
-tabs = st.tabs(["📂 Upload", "🛠 Clean Data", "📊 Visualize", "⬇️ Export"])
+tabs = st.tabs(["📄 Files", "🛠 Clean Data", "📊 Visualize", "⬇️ Export"])
 
 if uploaded_files:
     for file in uploaded_files:
@@ -78,7 +78,7 @@ if uploaded_files:
                     st.success("✅ Duplicates removed!")
 
             with col2:
-                if st.button(f"🩹 Fill Missing Values ({file.name})"):
+                if st.button(f"🧮 Fill Missing Values ({file.name})"):
                     numeric_cols = df.select_dtypes(include=['number']).columns
                     df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].mean())
                     st.success("✅ Missing values filled!")
@@ -90,10 +90,16 @@ if uploaded_files:
 
         # Data Visualization
         with tabs[2]:  # Visualize Tab
-            st.subheader("📈 Data Visualizations")
+            st.subheader("📊 Data Visualizations")
             with st.expander(f"📊 Show Summary of {file.name}"):
-                if not df.select_dtypes(include=['number']).empty:
-                    st.bar_chart(df.select_dtypes(include=['number']).iloc[:, :2])
+                numeric_df = df.select_dtypes(include=['number'])
+                if not numeric_df.empty:
+                    # Ensure column names are valid for Altair
+                    numeric_df.columns = [str(col).strip().replace(" ", "_") for col in numeric_df.columns]
+                    try:
+                        st.bar_chart(numeric_df.iloc[:, :2])
+                    except Exception as e:
+                        st.error(f"⚠️ Error rendering chart: {e}")
                 else:
                     st.warning("⚠️ No numerical data available for visualization.")
 
